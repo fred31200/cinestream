@@ -256,14 +256,19 @@ function SkCard(){return(
   </div>
 );}
 
-function Row({label,items,loading,onSelect,accent="#d4a017"}){
+function Row({label,items,loading,onSelect,accent="#d4a017",onViewAll}){
   const ref=useRef(null);
   const sc=(d)=>{if(ref.current)ref.current.scrollBy({left:d*520,behavior:"smooth"});};
   return(
     <div style={{marginBottom:34,animation:"rowIn .4s ease"}} className="row-wrap">
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,padding:"0 26px"}}>
         <h2 style={{fontFamily:"'DM Sans',sans-serif",fontSize:16,fontWeight:600,color:"#f0f0ff"}}>{label}</h2>
-        {loading?<Loader size={13} style={{color:"#4040a0",animation:"spin 1s linear infinite"}}/>:<span style={{color:accent,fontSize:12,fontFamily:"'DM Sans',sans-serif",cursor:"pointer",display:"flex",alignItems:"center",gap:3}}>Tout voir<ChevronRight size={12}/></span>}
+        {loading
+          ? <Loader size={13} style={{color:"#4040a0",animation:"spin 1s linear infinite"}}/>
+          : <span onClick={onViewAll} style={{color:accent,fontSize:12,fontFamily:"'DM Sans',sans-serif",cursor:"pointer",display:"flex",alignItems:"center",gap:3,padding:"4px 8px",borderRadius:6,transition:"background .2s"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.06)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+              Tout voir <ChevronRight size={12}/>
+            </span>
+        }
       </div>
       <div style={{position:"relative"}}>
         {!loading&&items.length>5&&<>
@@ -329,10 +334,13 @@ function Hero({items,onSelect,accent="#d4a017"}){
   );
 }
 
-function Grid({items,onSelect,title,loading,accent="#d4a017"}){
+function Grid({items,onSelect,title,loading,accent="#d4a017",onBack}){
   return(
     <div style={{padding:"22px 26px"}}>
-      <h2 style={{fontFamily:"'DM Sans',sans-serif",fontSize:19,fontWeight:600,color:"#f0f0ff",marginBottom:20}}>{title}</h2>
+      <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:20}}>
+        {onBack&&<button onClick={onBack} style={{background:"rgba(255,255,255,.08)",border:"1px solid rgba(255,255,255,.15)",color:"#b0b0d0",padding:"6px 14px",borderRadius:8,cursor:"pointer",fontSize:13,fontFamily:"'DM Sans',sans-serif",display:"flex",alignItems:"center",gap:6,transition:"background .2s"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.15)"} onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,.08)"}><ChevronLeft size={15}/>Accueil</button>}
+        <h2 style={{fontFamily:"'DM Sans',sans-serif",fontSize:19,fontWeight:600,color:"#f0f0ff"}}>{title}</h2>
+      </div>
       {loading&&<div style={{display:"flex",justifyContent:"center",padding:"50px 0"}}><Loader size={28} style={{color:accent,animation:"spin 1s linear infinite"}}/></div>}
       {!loading&&items.length===0&&<div style={{textAlign:"center",color:"#4040a0",fontFamily:"'DM Sans',sans-serif",padding:"50px 0"}}>Aucun résultat trouvé 🔍</div>}
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(145px,1fr))",gap:"17px 9px"}}>
@@ -343,7 +351,7 @@ function Grid({items,onSelect,title,loading,accent="#d4a017"}){
 }
 
 // ============================== ANIME SECTION ==============================
-function AnimeSection({search,activeCat,onSelect}){
+function AnimeSection({search,activeCat,onSelect,onCatChange}){
   const [rows,setRows]=useState({});
   const [loading,setLoading]=useState(new Set(ARC.map(r=>r.id)));
   const [srRes,setSrRes]=useState([]);
@@ -396,7 +404,7 @@ function AnimeSection({search,activeCat,onSelect}){
 
   if(activeCat!=="all"){
     const rc=ARC.find(r=>r.id===activeCat);
-    return <Grid items={rows[activeCat]||[]} onSelect={onSelect} title={rc?.l||activeCat} loading={loading.has(activeCat)} accent="#e84393"/>;
+    return <Grid items={rows[activeCat]||[]} onSelect={onSelect} title={rc?.l||activeCat} loading={loading.has(activeCat)} accent="#e84393" onBack={()=>onCatChange&&onCatChange("all")}/>;
   }
 
   const featured=rows["top"]?.slice(0,5)||[];
@@ -414,7 +422,7 @@ function AnimeSection({search,activeCat,onSelect}){
       </div>}
       <div style={{paddingTop:14}}>
         {ARC.map(r=>(
-          <Row key={r.id} label={r.l} items={rows[r.id]||[]} loading={loading.has(r.id)} onSelect={onSelect} accent="#e84393"/>
+          <Row key={r.id} label={r.l} items={rows[r.id]||[]} loading={loading.has(r.id)} onSelect={onSelect} accent="#e84393" onViewAll={()=>onCatChange&&onCatChange(r.id)}/>
         ))}
       </div>
       <div style={{padding:"6px 26px 0",display:"flex",alignItems:"center",gap:5}}>
@@ -426,7 +434,7 @@ function AnimeSection({search,activeCat,onSelect}){
 }
 
 // ============================== FILMS SECTION ==============================
-function FilmsSection({search,activeCat,onSelect}){
+function FilmsSection({search,activeCat,onSelect,onCatChange}){
   const filt=FI.filter(it=>{
     const q=search.toLowerCase();
     const m=!search||it.title.toLowerCase().includes(q)||it.genres.some(g=>g.toLowerCase().includes(q))||it.type.toLowerCase().includes(q);
@@ -438,9 +446,9 @@ function FilmsSection({search,activeCat,onSelect}){
   return(
     <div>
       {!isF&&<Hero items={feat} onSelect={onSelect} accent="#d4a017"/>}
-      {isF?<Grid items={filt} onSelect={onSelect} title={search?`Résultats · « ${search} »`:FC.find(c=>c.id===activeCat)?.l} accent="#d4a017"/>:
+      {isF?<Grid items={filt} onSelect={onSelect} title={search?`Résultats · « ${search} »`:FC.find(c=>c.id===activeCat)?.l} accent="#d4a017" onBack={!search&&activeCat!=="all"?()=>onCatChange("all"):undefined}/>:
         <div style={{paddingTop:14}}>
-          {FR.map(r=>{const it=ri(r.id);return it.length>0&&<Row key={r.id} label={r.l} items={it} loading={false} onSelect={onSelect} accent="#d4a017"/>;})
+          {FR.map(r=>{const it=ri(r.id);return it.length>0&&<Row key={r.id} label={r.l} items={it} loading={false} onSelect={onSelect} accent="#d4a017" onViewAll={()=>onCatChange&&onCatChange(r.id)}/>;})
           }
         </div>
       }
@@ -627,8 +635,8 @@ export default function App(){
     <div style={{background:"#07070f",minHeight:"100vh",overflowY:"auto"}} id="cs-root">
       <NavBar mode={mode} setMode={setMode} search={search} setSearch={setSearch} cat={cat} setCat={setCat}/>
       {mode==="films"
-        ?<FilmsSection search={search} activeCat={cat} onSelect={setSel}/>
-        :<AnimeSection search={search} activeCat={cat} onSelect={setSel}/>
+        ?<FilmsSection search={search} activeCat={cat} onSelect={setSel} onCatChange={setCat}/>
+        :<AnimeSection search={search} activeCat={cat} onSelect={setSel} onCatChange={setCat}/>
       }
       <Footer mode={mode}/>
       {sel&&<Modal item={sel} onClose={()=>setSel(null)} accent={sel.isAnime?"#e84393":"#d4a017"}/>}
