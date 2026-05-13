@@ -66,6 +66,55 @@ const PLATS = {
 const FB = ["linear-gradient(135deg,#1a1a2e,#0f3460,#533483)","linear-gradient(135deg,#0d0d20,#1a1040,#2d1b69)","linear-gradient(135deg,#0f2027,#203a43,#2c5364)","linear-gradient(135deg,#1a0a0a,#3a1515,#5a2828)","linear-gradient(135deg,#0a1a0a,#1a3a1a,#2a5a2a)","linear-gradient(135deg,#1a0f00,#3a2a10,#5a4a20)","linear-gradient(135deg,#0a0f1a,#1a253a,#2a3f5a)","linear-gradient(135deg,#1a0a20,#2a1540,#4a2560)"];
 const gfb = (id) => FB[(String(id).charCodeAt(0)||0)%FB.length];
 
+// URL directe vers la page de visionnage sur chaque plateforme
+const getPlatformUrl = (item) => {
+  const t = encodeURIComponent(item.title);
+  const urls = {
+    NETFLIX:     `https://www.netflix.com/search?q=${t}`,
+    DISNEY:      `https://www.disneyplus.com/search/${t}`,
+    AMAZON:      `https://www.amazon.fr/s?k=${t}&i=instant-video`,
+    HBO:         `https://www.max.com/search?q=${t}`,
+    APPLE:       `https://tv.apple.com/search?term=${t}`,
+    ARTE:        `https://www.arte.tv/fr/search/#q=${t}`,
+    FRANCE:      `https://www.france.tv/recherche?q=${t}`,
+    CRUNCHYROLL: `https://www.crunchyroll.com/search?q=${t}`,
+    ADN:         `https://www.animedigitalnetwork.fr/video#search?search=${t}`,
+    WAKANIM:     `https://wakanim.tv/fr/search?query=${t}`,
+  };
+  return urls[item.platform] || `https://www.google.com/search?q=${encodeURIComponent(item.title+" streaming")}`;
+};
+
+// Trailers YouTube connus pour les films/séries du catalogue
+const KNOWN_TRAILERS = {
+  "Inception":              "https://www.youtube.com/embed/YoHD9XEInc0",
+  "The Dark Knight":        "https://www.youtube.com/embed/EXeTwQWrcwY",
+  "Intouchables":           "https://www.youtube.com/embed/oJkKDFTFNtw",
+  "Interstellar":           "https://www.youtube.com/embed/zSWdZVtXT7E",
+  "Joker":                  "https://www.youtube.com/embed/zAGVQLHvwOY",
+  "Parasite":               "https://www.youtube.com/embed/5xH0HfJHsaY",
+  "Top Gun: Maverick":      "https://www.youtube.com/embed/qSqVVswa420",
+  "Dune: Partie 1":         "https://www.youtube.com/embed/n9xhJrPXop4",
+  "Dune: Partie 2":         "https://www.youtube.com/embed/Way9Dexny3w",
+  "Oppenheimer":            "https://www.youtube.com/embed/uYPbbksJxIg",
+  "Avengers: Endgame":      "https://www.youtube.com/embed/TcMBFSGVi1c",
+  "Spider-Man: Spider-Verse":"https://www.youtube.com/embed/shW9i6k8cR0",
+  "Lupin":                  "https://www.youtube.com/embed/ga0iTWXCGa0",
+  "Squid Game":             "https://www.youtube.com/embed/oqxAJKy0ii4",
+  "Stranger Things":        "https://www.youtube.com/embed/b9EkMc79ZSU",
+  "Wednesday":              "https://www.youtube.com/embed/Di310WS9rfc",
+  "Breaking Bad":           "https://www.youtube.com/embed/HhesaQXLuRY",
+  "Game of Thrones":        "https://www.youtube.com/embed/bjqEWgDVPe0",
+  "Arcane":                 "https://www.youtube.com/embed/fP7b7U1vPMs",
+  "Peaky Blinders":         "https://www.youtube.com/embed/oVzVdvGIC7U",
+  "Dark":                   "https://www.youtube.com/embed/rrwycJ08PSA",
+  "Succession":             "https://www.youtube.com/embed/OqiI5EmFIsI",
+  "Severance":              "https://www.youtube.com/embed/xEQP4VVuyrY",
+  "House of the Dragon":    "https://www.youtube.com/embed/DotnJ7tTA34",
+  "The Batman":             "https://www.youtube.com/embed/mqqft2x_Aa4",
+  "Amélie Poulain":         "https://www.youtube.com/embed/SrFt0BoNMOs",
+};
+const getTrailerEmbed = (item) => item.trailerEmbed || KNOWN_TRAILERS[item.title] || null;
+
 const FI = [
   {id:1,type:"Série",title:"Lupin",year:2021,info:"3 saisons",rating:7.5,platform:"NETFLIX",genres:["Action","Crime","Thriller"],lang:"🇫🇷 Français",desc:"Assane Diop, inspiré par Arsène Lupin, cherche à venger son père injustement accusé d'un crime qu'il n'a pas commis.",poster:`${T}/sgxkHLMDVGGHYmGq7oc4bSmTbnB.jpg`,backdrop:`${TW}/4rl0zrFnFJITaKaRR9HYj0bFKP9.jpg`,cats:["tendances","series","action","francais"],featured:true},
   {id:2,type:"Série",title:"Squid Game",year:2021,info:"2 saisons",rating:8.1,platform:"NETFLIX",genres:["Drame","Thriller","Survival"],lang:"🇰🇷 Coréen",desc:"Des joueurs criblés de dettes risquent leur vie dans des jeux d'enfants pour remporter 45,6 milliards de wons.",poster:`${T}/dDlEmu3EZ0Pgg93K2SVNLCjCSvE.jpg`,backdrop:`${TW}/oaGvjB0DvdhXhOAuADfHb261ZHa.jpg`,cats:["tendances","series","thriller","primes"],featured:false},
@@ -156,6 +205,7 @@ const j2i = (a) => ({
   poster:a.images?.jpg?.large_image_url||a.images?.jpg?.image_url||"",
   backdrop:a.images?.jpg?.large_image_url||a.images?.jpg?.image_url||"",
   status:a.status||"", rank:a.rank, popularity:a.popularity, members:a.members,
+  trailerEmbed: a.trailer?.embed_url ? a.trailer.embed_url.replace("autoplay=1","autoplay=0") : null,
 });
 
 // ============================== COMPONENTS ==============================
@@ -262,7 +312,9 @@ function Hero({items,onSelect,accent="#d4a017"}){
           </div>
           <p style={{color:"#b0b0d0",fontSize:14,fontFamily:"'DM Sans',sans-serif",lineHeight:1.7,maxWidth:490,marginBottom:20}}>{item.desc?.slice(0,200)}{item.desc?.length>200?"…":""}</p>
           <div style={{display:"flex",gap:9}}>
-            <button className={ia?"btn-pink":"btn-gold"}><Play size={14} fill="currentColor"/> Regarder</button>
+            <a href={getPlatformUrl(item)} target="_blank" rel="noopener noreferrer" style={{textDecoration:"none"}}>
+              <button className={ia?"btn-pink":"btn-gold"}><Play size={14} fill="currentColor"/> Regarder sur {PLATS[item.platform]?.label||"la plateforme"}</button>
+            </a>
             <button className="btn-ghost" onClick={()=>onSelect(item)}><Info size={14}/> Détails</button>
             <div className="icon-btn" style={{width:40,height:40}}><Plus size={16}/></div>
           </div>
@@ -399,21 +451,47 @@ function FilmsSection({search,activeCat,onSelect}){
 // ============================== MODAL ==============================
 function Modal({item,onClose,accent}){
   const [ie,setIe]=useState(false);
+  const [showTrailer,setShowTrailer]=useState(false);
   const pl=PLATS[item.platform]||PLATS.NETFLIX;
   const ia=item.isAnime;
   const c=accent||(ia?"#e84393":"#d4a017");
+  const trailerEmbed=getTrailerEmbed(item);
+  const watchUrl=getPlatformUrl(item);
+
   return(
     <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div className="modal-box">
-        <div style={{position:"relative",height:250,borderRadius:"16px 16px 0 0",overflow:"hidden"}}>
-          {(ie||!item.backdrop)?<div style={{width:"100%",height:"100%",background:ia?"linear-gradient(135deg,#1a0528,#380a50,#0d0d20)":gfb(item.id)}}/>
-            :<img src={item.backdrop} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}} onError={()=>setIe(true)}/>}
-          <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,#0d0d1c 0%,rgba(13,13,28,.15) 60%,transparent 100%)"}}/>
-          <button onClick={onClose} style={{position:"absolute",top:12,right:12,background:"rgba(13,13,28,.8)",border:"1px solid rgba(255,255,255,.14)",color:"#f0f0ff",width:32,height:32,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}><X size={16}/></button>
-          <div style={{position:"absolute",bottom:14,left:20}}><span style={{background:pl.color+"25",color:pl.color,border:`1px solid ${pl.color}45`,padding:"2px 7px",borderRadius:4,fontSize:10,fontWeight:700,fontFamily:"'DM Sans',sans-serif"}}>{pl.label}</span></div>
+        {/* Header backdrop ou lecteur trailer */}
+        <div style={{position:"relative",borderRadius:"16px 16px 0 0",overflow:"hidden",background:"#000"}}>
+          {showTrailer && trailerEmbed
+            ? <div style={{position:"relative",paddingBottom:"56.25%",height:0}}>
+                <iframe
+                  src={trailerEmbed+"&autoplay=1"}
+                  style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",border:"none"}}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title={`Trailer ${item.title}`}
+                />
+              </div>
+            : <div style={{height:240,position:"relative"}}>
+                {(ie||!item.backdrop)
+                  ?<div style={{width:"100%",height:"100%",background:ia?"linear-gradient(135deg,#1a0528,#380a50,#0d0d20)":gfb(item.id)}}/>
+                  :<img src={item.backdrop} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}} onError={()=>setIe(true)}/>}
+                <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,#0d0d1c 0%,rgba(13,13,28,.15) 60%,transparent 100%)"}}/>
+                {/* Bouton play trailer sur le backdrop */}
+                {trailerEmbed&&<button onClick={()=>setShowTrailer(true)} style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",background:"rgba(0,0,0,.7)",border:`2px solid ${c}`,color:c,width:60,height:60,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",backdropFilter:"blur(8px)",transition:"all .2s"}} title="Voir la bande-annonce">
+                  <Play size={24} fill={c}/>
+                </button>}
+                <div style={{position:"absolute",bottom:14,left:20}}><span style={{background:pl.color+"25",color:pl.color,border:`1px solid ${pl.color}45`,padding:"2px 7px",borderRadius:4,fontSize:10,fontWeight:700,fontFamily:"'DM Sans',sans-serif"}}>{pl.label}</span></div>
+                {trailerEmbed&&<div style={{position:"absolute",bottom:14,right:20,color:"rgba(255,255,255,.5)",fontSize:11,fontFamily:"'DM Sans',sans-serif"}}>▶ Cliquer pour la bande-annonce</div>}
+              </div>
+          }
+          <button onClick={()=>{setShowTrailer(false);onClose();}} style={{position:"absolute",top:10,right:10,background:"rgba(13,13,28,.85)",border:"1px solid rgba(255,255,255,.2)",color:"#f0f0ff",width:30,height:30,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",zIndex:10}}><X size={15}/></button>
+          {showTrailer&&<button onClick={()=>setShowTrailer(false)} style={{position:"absolute",top:10,left:10,background:"rgba(13,13,28,.85)",border:"1px solid rgba(255,255,255,.2)",color:"#f0f0ff",padding:"3px 10px",borderRadius:6,cursor:"pointer",fontSize:12,fontFamily:"'DM Sans',sans-serif",zIndex:10}}>← Retour</button>}
         </div>
+
         <div style={{padding:"0 24px 24px"}}>
-          <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:34,fontWeight:700,color:"#f0f0ff",marginBottom:3,lineHeight:1.1}}>{item.title}</h2>
+          <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:34,fontWeight:700,color:"#f0f0ff",marginBottom:3,lineHeight:1.1,marginTop:16}}>{item.title}</h2>
           {item.titleJP&&<p style={{fontFamily:"serif",fontSize:13,color:"#6060a0",marginBottom:9,fontStyle:"italic"}}>{item.titleJP}</p>}
           <div style={{display:"flex",flexWrap:"wrap",alignItems:"center",gap:11,marginBottom:12}}>
             {item.rating>0&&<span style={{display:"flex",alignItems:"center",gap:4,color:c,fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:14}}><Star size={13} fill={c}/> {item.rating.toFixed(2)}/10</span>}
@@ -437,14 +515,31 @@ function Modal({item,onClose,accent}){
               ))}
             </div>
           )}
+
+          {/* Boutons principaux */}
+          <div style={{display:"flex",gap:9,marginBottom:10,flexWrap:"wrap"}}>
+            {/* Bouton regarder → ouvre la plateforme */}
+            <a href={watchUrl} target="_blank" rel="noopener noreferrer" style={{textDecoration:"none",flex:1,minWidth:180}}>
+              <button className={ia?"btn-pink":"btn-gold"} style={{width:"100%",justifyContent:"center"}}>
+                <Play size={14} fill="currentColor"/>
+                Regarder sur {pl.label}
+                <ExternalLink size={12}/>
+              </button>
+            </a>
+            {/* Bouton bande-annonce */}
+            {trailerEmbed&&<button className="btn-ghost" onClick={()=>setShowTrailer(true)} style={{whiteSpace:"nowrap"}}>
+              🎬 Bande-annonce
+            </button>}
+          </div>
           <div style={{display:"flex",gap:9}}>
-            <button className={ia?"btn-pink":"btn-gold"} style={{flex:1,justifyContent:"center"}}><Play size={14} fill="currentColor"/> Regarder</button>
             {ia&&<a href={`https://myanimelist.net/anime/${item.malId}`} target="_blank" rel="noopener noreferrer" style={{textDecoration:"none"}}><button className="btn-ghost"><ExternalLink size={13}/> MAL</button></a>}
             <div className="icon-btn" style={{width:42,height:42}}><Plus size={16}/></div>
             <div className="icon-btn" style={{width:42,height:42}}><Heart size={16}/></div>
           </div>
           <p style={{color:"#202040",fontSize:10.5,fontFamily:"'DM Sans',sans-serif",marginTop:13,lineHeight:1.6}}>
-            {ia?"Source: MyAnimeList via Jikan API · Voir légalement sur Crunchyroll, ADN ou Wakanim":`Disponible sur ${pl.label} · Abonnement requis`}
+            {ia
+              ? `Le bouton "Regarder" ouvre Crunchyroll — connecte-toi avec ton compte premium pour regarder les épisodes complets.`
+              : `Le bouton "Regarder" ouvre ${PLATS[item.platform]?.label||"la plateforme"} — abonnement requis pour visionner.`}
           </p>
         </div>
       </div>
@@ -538,5 +633,7 @@ export default function App(){
       <Footer mode={mode}/>
       {sel&&<Modal item={sel} onClose={()=>setSel(null)} accent={sel.isAnime?"#e84393":"#d4a017"}/>}
     </div>
+  );
+}    </div>
   );
 }
