@@ -634,6 +634,4 @@ export default function App(){
       {sel&&<Modal item={sel} onClose={()=>setSel(null)} accent={sel.isAnime?"#e84393":"#d4a017"}/>}
     </div>
   );
-}    </div>
-  );
 }
